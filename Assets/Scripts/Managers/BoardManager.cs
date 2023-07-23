@@ -1,27 +1,21 @@
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 public class BoardManager : MonoBehaviour
 {
-    [SerializeField] private ItemSpawnAnimation _itemSpawnAnimation;
+    public int _xSize, _ySize;
+    public int _xOffset, _yOffset;
 
-    [SerializeField] private int _xSize, _ySize;
-    [SerializeField] private int _xOffset, _yOffset;
+    [SerializeField] private AnimationController _animationController;
+    [SerializeField] private RandomSpriteGenerator _randomSpriteGenerator;
 
     [SerializeField] private GameObject _tilePrefab;
     [SerializeField] private GameObject _itemPrefab;
 
-    [SerializeField] private int _numberOfSpritesGroup;
-
-    [SerializeField] private SpriteGroup[] _spriteGroup;
-
     private GameObject[,] _items;
-    private Sprite[] _sprites;
 
 
     private void Awake()
     {
-        _sprites = _spriteGroup[_numberOfSpritesGroup].GetSprites();
         GenerateBoard();
     }
 
@@ -32,16 +26,17 @@ public class BoardManager : MonoBehaviour
 
         var startX = transform.position.x;
         var startY = transform.position.y;
-        
-        SpawnTiles(startX,startY);
-        SpawnItems(startX,startY);
+
+        SpawnTiles(startX, startY);
+        SpawnItems(startX, startY);
+
 
         do
         {
             result = CheckMatches();
         } while (result);
 
-        _itemSpawnAnimation.IsBoardSpawned.Invoke(_items);
+        _animationController.IsBoardSpawned?.Invoke(_items);
     }
 
     private void SpawnTiles(float startX, float startY)
@@ -58,24 +53,23 @@ public class BoardManager : MonoBehaviour
 
     private void SpawnItems(float startX, float startY)
     {
-        for (int x = 0; x < _xSize; x++)
+        for (var x = 0; x < _xSize; x++)
         {
-            for (int y = 0; y < _ySize; y++)
+            for (var y = 0; y < _ySize; y++)
             {
                 var item = Instantiate(_itemPrefab,
                     new Vector3(startX + x * _xOffset, startY + y * _yOffset, 0),
                     Quaternion.identity);
-                GenerateRandomSprite(ref item);
+                
+               var index =  item.GetComponent<Index>();
+               index.X = x;
+               index.Y = y;
+                _randomSpriteGenerator.GetRandomSprite(ref item);
                 _items[x, y] = item;
             }
         }
     }
 
-    private void GenerateRandomSprite(ref GameObject item)
-    {
-        var randomSprite = _sprites[Random.Range(0, _sprites.Length)];
-        item.GetComponent<SpriteRenderer>().sprite = randomSprite;
-    }
 
     private bool CheckMatches()
     {
@@ -91,7 +85,7 @@ public class BoardManager : MonoBehaviour
 
                 if (firstElement != secondElement || secondElement != thirdElement) continue;
 
-                GenerateRandomSprite(ref _items[x, y]);
+                _randomSpriteGenerator.GetRandomSprite(ref _items[x, y]);
                 isMatchesFound = true;
             }
         }
@@ -106,11 +100,16 @@ public class BoardManager : MonoBehaviour
 
                 if (firstElement != secondElement || secondElement != thirdElement) continue;
 
-                GenerateRandomSprite(ref _items[x, y]);
+                _randomSpriteGenerator.GetRandomSprite(ref _items[x, y]);
                 isMatchesFound = true;
             }
         }
 
         return isMatchesFound;
+    }
+
+    public GameObject[,] GetItems()
+    {
+        return _items;
     }
 }
