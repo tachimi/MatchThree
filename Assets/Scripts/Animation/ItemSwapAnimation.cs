@@ -5,7 +5,7 @@ public class ItemSwapAnimation : MonoBehaviour
 {
     private float _animationDuration;
 
-    public Sequence ShowSuccessfulAnimation(Transform firstObj, Transform secondObj)
+    public Sequence ShowSwapAnimation(Transform firstObj, Transform secondObj)
     {
         var sequence = DOTween.Sequence();
 
@@ -15,10 +15,10 @@ public class ItemSwapAnimation : MonoBehaviour
         sequence.Join(firstObjTween);
         sequence.Join(secondObjTween);
 
-        return sequence.Play();
+        return sequence;
     }
 
-    public Sequence showAnimationWithoutMatching(Transform firstObj, Transform secondObj)
+    public Sequence ShowDoubleSwapAnimation(Transform firstObj, Transform secondObj)
     {
         var sequence = DOTween.Sequence();
 

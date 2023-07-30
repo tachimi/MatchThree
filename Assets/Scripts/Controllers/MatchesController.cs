@@ -3,114 +3,63 @@ using UnityEngine;
 
 public class MatchesController : MonoBehaviour
 {
-    public List<GameObject> CheckMatches(GameObject firstItem, GameObject secondItem, GameObject[,] items)
+    public List<Item> FindMatches(Item[,] items)
     {
-        var firstSprite = firstItem.GetComponent<SpriteRenderer>().sprite;
-        var secondSprite = secondItem.GetComponent<SpriteRenderer>().sprite;
+        var matchesBoard = new int[items.GetLength(0), items.GetLength(1)];
+        List<Item> matches = new();
 
-        List<GameObject> matches = new();
+        FindHorizontalMatches(items, ref matchesBoard);
+        FindVerticalMatches(items, ref matchesBoard);
 
-        var firstItemHorizontalMatches = FindHorizontalMatches(items, firstItem, firstSprite);
-        var firstItemVerticalMatches = FindVerticalMatches(items, firstItem, firstSprite);
-
-        if (firstItemHorizontalMatches.Count >= 2)
+        for (var x = 0; x < matchesBoard.GetLength(0); x++)
         {
-            matches.Add(firstItem);
-            matches.AddRange(firstItemHorizontalMatches);
-        }
-
-        if (firstItemVerticalMatches.Count >= 2)
-        {
-            matches.Add(firstItem);
-            matches.AddRange(firstItemVerticalMatches);
-        }
-
-
-        var secondItemHorizontalMatches = FindHorizontalMatches(items, secondItem, secondSprite);
-        var secondItemVerticalMatches = FindVerticalMatches(items, secondItem, secondSprite);
-
-        if (secondItemHorizontalMatches.Count >= 2)
-        {
-            matches.Add(secondItem);
-            matches.AddRange(secondItemHorizontalMatches);
-        }
-
-        if (secondItemVerticalMatches.Count >= 2)
-        {
-            matches.Add(secondItem);
-            matches.AddRange(secondItemVerticalMatches);
-        }
-
-        return matches;
-    }
-
-    private List<GameObject> FindHorizontalMatches(GameObject[,] items, GameObject item, Sprite itemSprite)
-    {
-        List<GameObject> matches = new();
-
-        var startIndex = item.GetComponent<Index>().Y;
-        var fixedLine = item.GetComponent<Index>().X;
-
-        for (var y = startIndex + 1; y < items.GetLength(1); y++)
-        {
-            if (itemSprite == items[fixedLine, y].GetComponent<SpriteRenderer>().sprite)
+            for (var y = 0; y < matchesBoard.GetLength(1); y++)
             {
-                matches.Add(items[fixedLine, y]);
-            }
-            else
-            {
-                break;
-            }
-        }
+                if (matchesBoard[x, y] != 1) continue;
 
-        for (var y = startIndex - 1; y >= 0; y--)
-        {
-            if (itemSprite == items[fixedLine, y].GetComponent<SpriteRenderer>().sprite)
-            {
-                matches.Add(items[fixedLine, y]);
-            }
-            else
-            {
-                break;
+                matches.Add(items[x, y]);
+                items[x, y] = null;
             }
         }
 
         return matches;
     }
 
-    private List<GameObject> FindVerticalMatches(GameObject[,] items, GameObject item, Sprite itemSprite)
+    private void FindHorizontalMatches(Item[,] items, ref int[,] matchesBoard)
     {
-        List<GameObject> matches = new();
-
-        var startIndex = item.GetComponent<Index>().X;
-        var fixedLine = item.GetComponent<Index>().Y;
-
-        for (var x = startIndex + 1; x < items.GetLength(0); x++)
+        for (var x = 0; x < items.GetLength(0) - 2; x++)
         {
-            if (itemSprite == items[x, fixedLine].GetComponent<SpriteRenderer>().sprite)
+            for (var y = 0; y < items.GetLength(1); y++)
             {
-                matches.Add(items[x, fixedLine]);
-            }
-            else
-            {
-                break;
+                var firstElement = items[x, y].SpriteRenderer.sprite;
+                var secondElement = items[x + 1, y].SpriteRenderer.sprite;
+                var thirdElement = items[x + 2, y].SpriteRenderer.sprite;
+
+                if (firstElement != secondElement || secondElement != thirdElement) continue;
+
+                matchesBoard[x, y] = 1;
+                matchesBoard[x + 1, y] = 1;
+                matchesBoard[x + 2, y] = 1;
             }
         }
-
-        for (var x = startIndex - 1; x >= 0; x--)
-        {
-            if (itemSprite == items[x, fixedLine].GetComponent<SpriteRenderer>().sprite)
-            {
-                matches.Add(items[x, fixedLine]);
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return matches;
     }
 
+    private void FindVerticalMatches(Item[,] items, ref int[,] matchesBoard)
+    {
+        for (var x = 0; x < items.GetLength(0); x++)
+        {
+            for (var y = 0; y < items.GetLength(1) - 2; y++)
+            {
+                var firstElement = items[x, y].SpriteRenderer.sprite;
+                var secondElement = items[x, y + 1].SpriteRenderer.sprite;
+                var thirdElement = items[x, y + 2].SpriteRenderer.sprite;
 
+                if (firstElement != secondElement || secondElement != thirdElement) continue;
+
+                matchesBoard[x, y] = 1;
+                matchesBoard[x, y + 1] = 1;
+                matchesBoard[x, y + 2] = 1;
+            }
+        }
+    }
 }

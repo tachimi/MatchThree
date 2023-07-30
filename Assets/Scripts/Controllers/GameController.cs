@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
@@ -9,107 +7,109 @@ public class GameController : MonoBehaviour
     [SerializeField] private MovementController _movementController;
     [SerializeField] private MatchesController _matchesController;
     [SerializeField] private AnimationController _animationController;
+    [SerializeField] private BoardController _boardController;
+    [SerializeField] private EmptyTilesController _emptyTilesController;
+    [SerializeField] private Grid _grid;
 
     private Sequence _sequence;
+    private List<Item> _matches;
+    private Item[,] _items;
+
     private bool _isAnimationOnPlay;
-    private List<GameObject> _matches;
 
     private void Awake()
     {
-        _movementController.IsDerectionFound += FoundMatches;
+        _movementController.IsDerectionFound += FindMatches;
+        _boardController.IsBoardSpawned += _animationController.ShowSpawnAnimationOnStart;
     }
 
-    private void Update()
+    private void Start()
     {
-        if (!_isAnimationOnPlay)
+        _items = _boardController.GetItems();
+    }
+
+
+    private void FindMatches(Vector3Int firstItemIndex, Vector3Int secondItemIndex)
+    {
+        if (IsIndexOutOfBounds(secondItemIndex))
         {
             return;
         }
 
-        if (_sequence.IsActive()) return;
+        ChangeMovementControllerStatus();
 
-        ChangeAnimationStatus();
+        _matches = new();
+
+        var firstItem = _items[firstItemIndex.x, firstItemIndex.y];
+        var secondItem = _items[secondItemIndex.x, secondItemIndex.y];
+
+        UpdateItems(firstItemIndex, secondItemIndex);
+
+        _matches = _matchesController.FindMatches(_items);
+
+        if (_matches.Count == 0)
+        {
+            UpdateItems(firstItemIndex, secondItemIndex);
+
+            _sequence = _animationController.DoDoubleSwapAnimation(firstItem, secondItem)
+                .OnComplete(ChangeMovementControllerStatus);
+            return;
+        }
+
+        _sequence = _animationController.DoSwapAnimation(firstItem, secondItem);
+        _sequence.Append(_animationController.HideItems(_matches));
+        _sequence.OnComplete(DestroyMatches);
+        _sequence.OnComplete(HandleSituation);
+        _sequence.Play();
     }
 
-    private void FoundMatches(int originalIndex, int newIndex, bool isHorizontal, GameObject[,] items)
+    private void HandleSituation()
     {
-        _matches = new List<GameObject>();
-        var isMatchesFound = false;
-
-        var x = _movementController._x;
-        var y = _movementController._y;
-
-
-        if (isHorizontal)
-        {
-            UpdateIndex(items[originalIndex, y], items[newIndex, y], items);
-
-            _matches = _matchesController.CheckMatches(items[originalIndex, y], items[newIndex, y], items);
-
-            if (_matches.Count > 0)
-            {
-                isMatchesFound = true;
-            }
-        }
-        else
-        {
-            UpdateIndex(items[x, originalIndex], items[x, newIndex], items);
-
-            _matches = _matchesController.CheckMatches(items[x, originalIndex], items[x, newIndex], items);
-
-            if (_matches.Count > 0)
-            {
-                isMatchesFound = true;
-            }
-        }
-
-        ChangeAnimationStatus();
-
-        switch (isMatchesFound)
-        {
-            case true when isHorizontal:
-                _sequence = _animationController.DoSwapAnimation(x, y, originalIndex, newIndex, true, true, items,
-                    _matches).OnComplete((HideItems));
-                return;
-            case true when !isHorizontal:
-                _sequence = _animationController.DoSwapAnimation(x, y, originalIndex, newIndex, false, true, items,
-                    _matches).OnComplete((HideItems));
-                return;
-            case false when isHorizontal:
-                UpdateIndex(items[originalIndex, y], items[newIndex, y], items);
-
-                _sequence = _animationController.DoSwapAnimation(x, y, originalIndex, newIndex, true, false, items,
-                    _matches);
-                return;
-            case false when !isHorizontal:
-                UpdateIndex(items[x, originalIndex], items[x, newIndex], items);
-
-                _sequence = _animationController.DoSwapAnimation(x, y, originalIndex, newIndex, false, false, items,
-                    _matches);
-                break;
-        }
+        _emptyTilesController.FillEmptyTiles(_items);
+        _boardController.SpawnNewItems();
+        _sequence = _animationController.DoFallAnimation(_items);
+        _sequence.Append(_animationController.DoSpawnAnimation(_items));
+        _sequence.OnComplete(CheckForMatches);
+        _sequence.Play();
     }
 
-    private void HideItems()
+    private void CheckForMatches()
     {
+        _matches = _matchesController.FindMatches(_items);
+        if (_matches.Count == 0)
+        {
+            ChangeMovementControllerStatus();
+            return;
+        }
+
         _sequence = _animationController.HideItems(_matches);
+        _sequence.OnComplete(DestroyMatches);
+        _sequence.OnComplete(HandleSituation);
     }
 
-    private void UpdateIndex(GameObject firstItem, GameObject secondItem, GameObject[,] items)
+    private bool IsIndexOutOfBounds(Vector3Int index)
     {
-        var firstItemIndex = firstItem.GetComponent<Index>();
-        var secondItemIndex = secondItem.GetComponent<Index>();
-
-        items[firstItemIndex.X, firstItemIndex.Y] = secondItem;
-        items[secondItemIndex.X, secondItemIndex.Y] = firstItem;
-
-        (firstItemIndex.X, secondItemIndex.X) = (secondItemIndex.X, firstItemIndex.X);
-        (firstItemIndex.Y, secondItemIndex.Y) = (secondItemIndex.Y, firstItemIndex.Y);
+        return index.x < 0 || index.y < 0 || index.x >= _items.GetLength(0) || index.y >= _items.GetLength(1);
     }
 
-    private void ChangeAnimationStatus()
+    private void UpdateItems(Vector3Int firstItemIndex, Vector3Int secondItemIndex)
     {
-        _isAnimationOnPlay = !_isAnimationOnPlay;
+        (_items[firstItemIndex.x, firstItemIndex.y], _items[secondItemIndex.x, secondItemIndex.y]) =
+            (_items[secondItemIndex.x, secondItemIndex.y], _items[firstItemIndex.x, firstItemIndex.y]);
+    }
+
+    private void ChangeMovementControllerStatus()
+    {
         _movementController.enabled = !_movementController.enabled;
+    }
+
+    private void DestroyMatches()
+    {
+        foreach (var item in _matches)
+        {
+            Destroy(item.gameObject);
+        }
+
+        _matches.Clear();
     }
 }

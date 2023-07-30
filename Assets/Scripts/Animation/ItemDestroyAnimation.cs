@@ -6,7 +6,7 @@ public class ItemDestroyAnimation : MonoBehaviour
 {
     private float _animationDuration;
 
-    public Sequence HideItems(List<GameObject> items)
+    public Sequence HideItems(List<Item> items)
     {
         var sequence = DOTween.Sequence();
         foreach (var item in items)
@@ -18,6 +18,7 @@ public class ItemDestroyAnimation : MonoBehaviour
 
         return sequence.Play();
     }
+
 
     public void SetDuration(float duration)
     {

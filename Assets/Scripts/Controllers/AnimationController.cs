@@ -8,63 +8,48 @@ public class AnimationController : MonoBehaviour
     [SerializeField] private ItemSpawnAnimation _itemSpawnAnimation;
     [SerializeField] private ItemSwapAnimation _itemSwapAnimation;
     [SerializeField] private ItemDestroyAnimation _itemDestroyAnimation;
+    [SerializeField] private ItemFallAnimation _itemFallAnimation;
 
     [SerializeField] private float _itemSpawnAnimationDuration = 1f;
     [SerializeField] private float _itemSwapAnimationDuration = 1f;
-    [SerializeField] private float _itemFadeAnimationDuration = 1f;
-
-    public Action<GameObject[,]> IsBoardSpawned;
-    public Func<List<GameObject>, Sequence> IsMatchesFound;
-
+    [SerializeField] private float _itemDestroyAnimationDuration = 1f;
+    [SerializeField] private float _itemFallAnimationDuration = 1f;
 
     private void Awake()
     {
         _itemSpawnAnimation.SetDuration(_itemSpawnAnimationDuration);
         _itemSwapAnimation.SetDuration(_itemSwapAnimationDuration);
-        _itemDestroyAnimation.SetDuration(_itemFadeAnimationDuration);
-
-        IsBoardSpawned += _itemSpawnAnimation.ShowSpawnAnimation;
-
-        IsMatchesFound += _itemDestroyAnimation.HideItems;
+        _itemDestroyAnimation.SetDuration(_itemDestroyAnimationDuration);
+        _itemFallAnimation.SetDuration(_itemFallAnimationDuration);
     }
 
-    public Sequence DoSwapAnimation(int _x, int _y, int originalIndex, int newIndex, bool isHorizontal,
-        bool isMatchesFound, GameObject[,] _items, List<GameObject> matches)
+    public Sequence DoSwapAnimation(Item firstItem, Item secondItem)
     {
-        var sequence = DOTween.Sequence();
-
-        if (isHorizontal)
-        {
-            if (isMatchesFound)
-            {
-                sequence = _itemSwapAnimation.ShowSuccessfulAnimation(_items[originalIndex, _y].transform,
-                    _items[newIndex, _y].transform);
-            }
-            else
-            {
-                sequence = _itemSwapAnimation.showAnimationWithoutMatching(_items[originalIndex, _y].transform,
-                    _items[newIndex, _y].transform);
-            }
-        }
-        else
-        {
-            if (isMatchesFound)
-            {
-                sequence = _itemSwapAnimation.ShowSuccessfulAnimation(_items[_x, originalIndex].transform,
-                    _items[_x, newIndex].transform);
-            }
-            else
-            {
-                sequence = _itemSwapAnimation.showAnimationWithoutMatching(_items[_x, originalIndex].transform,
-                    _items[_x, newIndex].transform);
-            }
-        }
-
-        return sequence;
+        return _itemSwapAnimation.ShowSwapAnimation(firstItem.transform, secondItem.transform);
     }
 
-    public Sequence HideItems(List<GameObject> matches)
+    public Sequence DoDoubleSwapAnimation(Item firstItem, Item secondItem)
     {
-        return IsMatchesFound.Invoke(matches);
+        return _itemSwapAnimation.ShowDoubleSwapAnimation(firstItem.transform, secondItem.transform);
+    }
+
+    public Sequence DoFallAnimation(Item[,] items)
+    {
+        return _itemFallAnimation.ShowFallAnimation(items);
+    }
+
+    public Sequence HideItems(List<Item> matches)
+    {
+        return _itemDestroyAnimation.HideItems(matches);
+    }
+
+    public Sequence DoSpawnAnimation(Item[,] items)
+    {
+        return _itemSpawnAnimation.ShowSpawnAnimation(items);
+    }
+
+    public void ShowSpawnAnimationOnStart(Item[,] items)
+    {
+        _itemSpawnAnimation.ShowSpawnAnimationOnStart(items);
     }
 }

@@ -12,8 +12,8 @@ public class RandomSpriteGenerator : MonoBehaviour
         _sprites = _spriteGroup[_numberOfSpritesGroup].GetSprites();
     }
 
-    public void GetRandomSprite(ref GameObject item)
+    public void GetRandomSprite(ref Item item)
     {
-        item.GetComponent<SpriteRenderer>().sprite = _sprites[Random.Range(0, _sprites.Length)];
+        item.SpriteRenderer.sprite = _sprites[Random.Range(0, _sprites.Length)];
     }
 }
