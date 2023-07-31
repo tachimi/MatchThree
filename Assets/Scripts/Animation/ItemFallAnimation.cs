@@ -5,7 +5,7 @@ public class ItemFallAnimation : MonoBehaviour
 {
     private float _animationDuration;
 
-    public Sequence ShowFallAnimation(Item[,] items)
+    public Sequence ShowFallAnimation(Item[,] items, Grid grid)
     {
         var sequence = DOTween.Sequence();
 
@@ -15,12 +15,10 @@ public class ItemFallAnimation : MonoBehaviour
             {
                 if (items[x, y] == null) continue;
 
-                var itemXPosition = items[x, y].transform.position.x;
-                var itemYPosition = items[x, y].transform.position.y;
+                var itemPos = grid.GetCellCenterWorld(new Vector3Int(x, y, 0));
 
-                if (itemXPosition == x && itemYPosition == y) continue;
-
-                var tween = items[x, y].transform.DOMove(new Vector3(x, y, 0), _animationDuration);
+                var tween = items[x, y].transform
+                    .DOMove(itemPos, _animationDuration);
                 sequence.Join(tween);
             }
         }

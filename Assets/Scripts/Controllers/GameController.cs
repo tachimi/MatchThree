@@ -65,9 +65,9 @@ public class GameController : MonoBehaviour
 
     private void HandleSituation()
     {
-        _emptyTilesController.FillEmptyTiles(_items);
+        var isNeedFallAnimation = _emptyTilesController.FillEmptyTiles(_items);
+        _sequence = _animationController.DoFallAnimation(_items, _grid, isNeedFallAnimation);
         _boardController.SpawnNewItems();
-        _sequence = _animationController.DoFallAnimation(_items);
         _sequence.Append(_animationController.DoSpawnAnimation(_items));
         _sequence.OnComplete(CheckForMatches);
         _sequence.Play();

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
@@ -33,9 +32,9 @@ public class AnimationController : MonoBehaviour
         return _itemSwapAnimation.ShowDoubleSwapAnimation(firstItem.transform, secondItem.transform);
     }
 
-    public Sequence DoFallAnimation(Item[,] items)
+    public Sequence DoFallAnimation(Item[,] items, Grid grid, bool isNeedFallAnimation)
     {
-        return _itemFallAnimation.ShowFallAnimation(items);
+        return !isNeedFallAnimation ? DOTween.Sequence() : _itemFallAnimation.ShowFallAnimation(items, grid);
     }
 
     public Sequence HideItems(List<Item> matches)

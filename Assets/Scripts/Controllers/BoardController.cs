@@ -47,7 +47,7 @@ public class BoardController : MonoBehaviour
             for (var y = 0; y < _ySize; y++)
             {
                 var tile = Instantiate(_tilePrefab);
-                tile.transform.position = _grid.WorldToCell(new Vector3Int(x, y, 0));
+                tile.transform.position = _grid.GetCellCenterWorld(new Vector3Int(x, y, 0));
             }
         }
     }
@@ -60,7 +60,7 @@ public class BoardController : MonoBehaviour
             {
                 var item = Instantiate(_itemPrefab);
                 _randomSpriteGenerator.GetRandomSprite(ref item);
-                item.transform.position = _grid.WorldToCell(new Vector3Int(x, y, 0));
+                item.transform.position = _grid.GetCellCenterWorld(new Vector3Int(x, y, 0));
                 _items[x, y] = item;
             }
         }
@@ -122,7 +122,7 @@ public class BoardController : MonoBehaviour
                 _randomSpriteGenerator.GetRandomSprite(ref item);
 
                 item.transform.localScale = new Vector3(0, 0, 0);
-                item.transform.position = _grid.WorldToCell(new Vector3Int(x, y, 0));
+                item.transform.position = _grid.GetCellCenterWorld(new Vector3Int(x, y, 0));
 
                 _items[x, y] = item;
             }

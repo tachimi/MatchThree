@@ -2,8 +2,9 @@ using UnityEngine;
 
 public class EmptyTilesController : MonoBehaviour
 {
-    public void FillEmptyTiles(Item[,] items)
+    public bool FillEmptyTiles(Item[,] items)
     {
+        var isNeedFallAnimation = false;
         for (var y = 0; y < items.GetLength(1); y++)
         {
             for (var x = 0; x < items.GetLength(0); x++)
@@ -13,11 +14,13 @@ public class EmptyTilesController : MonoBehaviour
                 var newY = FindTopItem(x, y, items);
                 
                 if (newY < 0) continue;
-                
+                isNeedFallAnimation = true;
                 items[x, y] = items[x, newY];
                 items[x, newY] = null;
             }
         }
+
+        return isNeedFallAnimation;
     }
 
     private int FindTopItem(int x, int currentY, Item[,] items)
